@@ -1,0 +1,1118 @@
+local win = loadstring(game:HttpGet("https://scripting.live/gamma.lua"))()
+
+local Window = win:CreateWindow("dawn beta UI test")
+
+local function runFunction(f)
+xpcall(f, warn)
+end
+
+Window:TitleBar("1.1.0", "this is not the final product!", "UI Library - @huge.heart", "@kuba was here", "Dawn Beta Version 1.1")
+local aim = Window:CreateTab("aim")
+local miscstuff1 = Window:CreateTab("misc")
+local sett = Window:CreateTab("tps")
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local legitsection = aim:Section()
+
+
+
+local function printGreen(message)
+    print("\27[32m" .. message .. "\27[0m")
+end
+
+
+printGreen("Script has successfully been executed.")
+
+
+
+
+-- varibles bbg syynnnnynn ughhh
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local tool
+local renderSteppedConnection
+
+-- nigger
+local function createClickTPTool()
+    -- Remove existing tool if it exists
+    if player.Backpack:FindFirstChild("Click TP Tool") then
+        player.Backpack:FindFirstChild("Click TP Tool"):Destroy()
+    end
+
+    -- create tp tpppppl.exe sonic.exe bad
+    tool = Instance.new("Tool")
+    tool.Name = "Click TP Tool"
+    tool.RequiresHandle = false
+    tool.Parent = player.Backpack
+
+    -- Create the crosshair
+    local crosshair
+    tool.Equipped:Connect(function()
+        -- Cleanup any existing crosshair or connection
+        if crosshair then
+            crosshair:Destroy()
+        end
+        if renderSteppedConnection then
+            renderSteppedConnection:Disconnect()
+            renderSteppedConnection = nil
+        end
+
+        -- Create the crosshair
+        crosshair = Drawing.new("Text")
+        crosshair.Size = 20
+        crosshair.Center = true
+        crosshair.Outline = true
+        crosshair.Text = "Click to Teleport"
+        crosshair.Color = Color3.new(1, 1, 1)
+        crosshair.Visible = true
+
+        -- Update crosshair position to follow mouse
+        renderSteppedConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            if crosshair and crosshair.Visible then
+                local success, mouseLocation = pcall(function()
+                    return game:GetService("UserInputService"):GetMouseLocation()
+                end)
+
+                if success and mouseLocation then
+                    crosshair.Position = Vector2.new(mouseLocation.X, mouseLocation.Y)
+                else
+                    warn("Failed to get mouse location.")
+                end
+            end
+        end)
+    end)
+
+    -- Remove the crosshair upon unequipping
+    tool.Unequipped:Connect(function()
+        if crosshair then
+            crosshair:Remove()
+            crosshair = nil
+        end
+        if renderSteppedConnection then
+            renderSteppedConnection:Disconnect()
+            renderSteppedConnection = nil
+        end
+    end)
+
+    -- tp on click
+    tool.Activated:Connect(function()
+        local targetPosition = mouse.Hit.p
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+        end
+    end)
+end
+
+-- inventory after death dont touch kuba
+player.CharacterAdded:Connect(function()
+    task.wait(1) -- Small delay to ensure character is fully loaded
+    createClickTPTool()
+end)
+
+-- Initialize the tool
+createClickTPTool()
+
+
+--------------------------------------------------------------------------------
+-- Camlock Variables kuba stop
+--------------------------------------------------------------------------------
+
+local camlockEnabled = false
+local camlockTarget = nil
+local fovRadius = 100 -- Default FOV radius
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false -- Initially hidden
+fovCircle.Color = Color3.new(1, 1, 1)
+fovCircle.Thickness = 1
+fovCircle.Filled = false
+fovCircle.Radius = fovRadius
+
+local highlight = Instance.new("Highlight") -- Highlight Instance for targeting
+highlight.FillColor = Color3.new(1, 0, 0)
+highlight.FillTransparency = 0.5
+highlight.OutlineColor = Color3.new(1, 1, 1)
+highlight.OutlineTransparency = 0
+highlight.Enabled = false -- Initially disabled
+
+local lp = game:GetService("Players").LocalPlayer -- Local Player Reference
+local players = game:GetService("Players") -- Players Service
+local userInputService = game:GetService("UserInputService") -- Input Service
+local runService = game:GetService("RunService") -- RunService for rendering updates
+
+--------------------------------------------------------------------------------
+-- Helper Functions
+--------------------------------------------------------------------------------
+
+-- Update FOV Circle Position
+local function updateFOVCircle()
+    local mouseLocation = userInputService:GetMouseLocation()
+    fovCircle.Position = Vector2.new(mouseLocation.X, mouseLocation.Y)
+end
+
+-- Get the nearest player within the FOV radius
+local function getPlayerInFOV()
+    local closestPlayer = nil
+    local closestDistance = fovRadius
+    local camera = workspace.CurrentCamera
+
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= lp and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
+            if onScreen then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - fovCircle.Position).Magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestPlayer = player
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Highlight the Target
+local function highlightTarget(target)
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        highlight.Adornee = target.Character
+        highlight.Parent = workspace
+        highlight.Enabled = true
+    else
+        highlight.Adornee = nil
+        highlight.Parent = nil
+        highlight.Enabled = false
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Camlock Variables
+--------------------------------------------------------------------------------
+
+local camlockEnabled = false
+local camlockTarget = nil
+local fovRadius = 100 -- Default FOV radius
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false -- Initially hidden
+fovCircle.Color = Color3.new(1, 1, 1)
+fovCircle.Thickness = 1
+fovCircle.Filled = false
+fovCircle.Radius = fovRadius
+
+local highlight = Instance.new("Highlight") -- Highlight Instance for targeting
+highlight.FillColor = Color3.new(1, 0, 0)
+highlight.FillTransparency = 0.5
+highlight.OutlineColor = Color3.new(1, 1, 1)
+highlight.OutlineTransparency = 0
+highlight.Enabled = false -- Initially disabled
+
+local predictionAmount = 0 -- Prediction adjustment
+local smoothingAmount = 1 -- Smoothing adjustment
+local koEnabled = true -- KO feature toggle
+
+local lp = game:GetService("Players").LocalPlayer -- Local Player Reference
+local players = game:GetService("Players") -- Players Service
+local userInputService = game:GetService("UserInputService") -- Input Service
+local runService = game:GetService("RunService") -- RunService for rendering updates
+
+--------------------------------------------------------------------------------
+-- Helper Functions
+--------------------------------------------------------------------------------
+
+-- Update FOV Circle Position
+local function updateFOVCircle()
+    local mouseLocation = userInputService:GetMouseLocation()
+    fovCircle.Position = Vector2.new(mouseLocation.X, mouseLocation.Y)
+end
+
+-- Get the nearest player within the FOV radius
+local function getPlayerInFOV()
+    local closestPlayer = nil
+    local closestDistance = fovRadius
+    local camera = workspace.CurrentCamera
+
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= lp and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
+            if onScreen then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - fovCircle.Position).Magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestPlayer = player
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Highlight the Target
+local function highlightTarget(target)
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        highlight.Adornee = target.Character
+        highlight.Parent = workspace
+        highlight.Enabled = true
+    else
+        highlight.Adornee = nil
+        highlight.Parent = nil
+        highlight.Enabled = false
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Camlock Logic
+--------------------------------------------------------------------------------
+
+-- Camlock Toggle
+legitsection:Toggle("Enable Camlock", function(state)
+    camlockEnabled = state
+    camlockTarget = nil
+    highlightTarget(nil) -- Clear any highlights
+    fovCircle.Visible = state -- Show/Hide FOV Circle based on Camlock toggle
+    print("[Camlock]:", state and "Enabled" or "Disabled")
+end)
+
+-- FOV Radius Slider
+legitsection:Slider("FOV Radius", 50, 300, function(value)
+    fovRadius = value
+    fovCircle.Radius = value
+    print("[FOV Radius]:", fovRadius)
+end)
+
+-- Prediction Slider
+legitsection:Slider("Prediction", 0, 5, function(value)
+    predictionAmount = value
+    print("[Prediction Amount]:", predictionAmount)
+end)
+
+-- Smoothing Slider
+legitsection:Slider("Smoothing", 1, 20, function(value)
+    smoothingAmount = value
+    print("[Smoothing Amount]:", smoothingAmount)
+end)
+
+-- Toggle KO Feature
+legitsection:Toggle("Stop Lock on KO", function(state)
+    koEnabled = state
+    print("[KO Feature]:", state and "Enabled" or "Disabled")
+end)
+
+-- Keybind for Locking onto a Player
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if camlockEnabled and input.KeyCode == Enum.KeyCode.G then
+        if camlockTarget then
+            -- Toggle off if already locked onto a player
+            camlockTarget = nil
+            highlightTarget(nil)
+            print("[Camlock]: Stopped locking onto player")
+        else
+            -- Lock onto a new player if within FOV
+            local target = getPlayerInFOV()
+            if target and target ~= lp then -- Ensure target is not the local player
+                camlockTarget = target
+                highlightTarget(target)
+                print("[Camlock]: Locked onto", camlockTarget.Name)
+            else
+                print("[Camlock]: No valid target in FOV")
+            end
+        end
+    end
+end)
+
+-- Lock Camera onto Target
+runService.RenderStepped:Connect(function()
+    if camlockEnabled and camlockTarget and camlockTarget.Character and camlockTarget.Character:FindFirstChild("HumanoidRootPart") then
+        local camera = workspace.CurrentCamera
+        local hrp = camlockTarget.Character.HumanoidRootPart
+
+        -- Predict the target's position
+        local predictedPosition = hrp.Position + (hrp.Velocity * predictionAmount)
+
+        -- Smooth the camera transition
+        local smoothedCFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, predictedPosition), 1 / smoothingAmount)
+        camera.CFrame = smoothedCFrame
+
+        -- Check health and auto-unlock if KO is enabled
+        if koEnabled then
+            local humanoid = camlockTarget.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health <= 9 then
+                camlockTarget = nil
+                highlightTarget(nil)
+                print("[Camlock]: Auto-unlocked due to low health")
+            end
+        end
+    end
+end)
+
+-- Update FOV Circle Position
+runService.RenderStepped:Connect(function()
+    if camlockEnabled then
+        updateFOVCircle()
+    end
+end)
+
+
+
+local misc = miscstuff1:Section()
+
+--// ForceField Material Toggle
+local forceFieldEnabled = false
+
+misc:Toggle("ForceField Body", function(state)
+    forceFieldEnabled = state
+    local character = lp.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                part.Material = state and Enum.Material.ForceField or Enum.Material.Plastic
+            end
+        end
+    end
+end)
+
+-- Monitor Character Respawn
+lp.CharacterAdded:Connect(function(character)
+    character:WaitForChild("HumanoidRootPart") -- Ensure character loads fully
+    if forceFieldEnabled then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                part.Material = Enum.Material.ForceField
+            end
+        end
+    end
+end)
+
+--// Disable Snow Maps Variables
+local snowMapsDisabled = false
+local originalMaterials = {}
+local originalColors = {}
+local snowParts = {}
+local iceParts = {}
+
+-- Function to disable snow maps
+local function disableSnowMaps()
+    -- Loop through all parts in the workspace
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") then
+            -- Check for material "Sand" and change it to Grass with a dark green color
+            if part.Material == Enum.Material.Sand then
+                -- Save original material and color
+                originalMaterials[part] = part.Material
+                originalColors[part] = part.Color
+
+                -- Change material and color
+                part.Material = Enum.Material.Grass
+                part.Color = Color3.fromRGB(0, 100, 0) -- Darkish green
+            end
+
+            -- Remove parts named "SNOWs_"
+            if part.Name:find("SNOWs_") then
+                table.insert(snowParts, part)
+                part.Parent = nil -- Temporarily remove it from the workspace
+            end
+
+            -- Remove parts with material "Ice"
+            if part.Material == Enum.Material.Ice then
+                table.insert(iceParts, part)
+                part.Parent = nil -- Temporarily remove it from the workspace
+            end
+        end
+    end
+end
+
+-- Function to restore snow maps
+local function restoreSnowMaps()
+    -- Restore materials and colors
+    for part, material in pairs(originalMaterials) do
+        if part and part.Parent then
+            part.Material = material
+            part.Color = originalColors[part] or part.Color
+        end
+    end
+
+    -- Clear original data
+    originalMaterials = {}
+    originalColors = {}
+
+    -- Restore removed snow parts
+    for _, part in pairs(snowParts) do
+        if not part.Parent then
+            part.Parent = workspace
+        end
+    end
+    snowParts = {}
+
+    -- Restore removed ice parts
+    for _, part in pairs(iceParts) do
+        if not part.Parent then
+            part.Parent = workspace
+        end
+    end
+    iceParts = {}
+end
+
+
+misc:Toggle("Disable Snow Maps", function(state)
+    snowMapsDisabled = state
+    if state then
+        disableSnowMaps()
+    else
+        restoreSnowMaps()
+    end
+end)
+
+
+--// No Fog Feature Variables
+local noFogEnabled = false
+
+-- Function to remove fog
+local function removeFog()
+    local lighting = game:GetService("Lighting")
+    lighting.FogEnd = math.huge
+    lighting.FogStart = math.huge
+end
+
+-- Function to reset fog to default
+local function resetFog()
+    local lighting = game:GetService("Lighting")
+    lighting.FogEnd = 1000 -- Default values, adjust as needed
+    lighting.FogStart = 0
+end
+
+
+misc:Toggle("No Fog", function(state)
+    noFogEnabled = state
+    if state then
+        removeFog()
+        print("[No Fog]: Enabled")
+    else
+        resetFog()
+        print("[No Fog]: Disabled")
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- No Slowdown Feature: Maintains WalkSpeed at 16 unless sprinting
+--------------------------------------------------------------------------------
+
+local noSlowdownEnabled = false
+local defaultWalkSpeed = 16 -- Default walk speed
+local lp = game:GetService("Players").LocalPlayer
+
+-- Function to maintain WalkSpeed
+local function maintainWalkSpeed()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+            if noSlowdownEnabled and humanoid.WalkSpeed < defaultWalkSpeed then
+                humanoid.WalkSpeed = defaultWalkSpeed
+            end
+        end)
+    end
+end
+
+-- Toggle to enable/disable No Slowdown
+misc:Toggle("Enable No Slowdown", function(state)
+    noSlowdownEnabled = state
+    print("[No Slowdown] Toggled:", state)
+
+    if noSlowdownEnabled then
+        -- Apply to the current character
+        maintainWalkSpeed()
+
+        -- Apply to new characters on respawn
+        lp.CharacterAdded:Connect(function()
+            if noSlowdownEnabled then
+                maintainWalkSpeed()
+            end
+        end)
+    end
+end)
+
+misc:Toggle("Loop Grab Tools", function(state)
+        local d = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        for _, tool in pairs(game.Workspace.Ignored.ItemsDrop:GetChildren()) do
+            if tool.Name == "Part" then
+                if tool:FindFirstChild("[LockPicker]") or tool:FindFirstChild("[Knife]") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = tool.CFrame
+                    if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - tool.Position).Magnitude <= 50 then
+                        wait()
+                    end
+                end
+            end
+        end
+        -- Return to original position
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d)
+end)
+
+-- Variables
+local autoDropEnabled = false
+local dropAmount = 15000 -- Default cash amount to drop
+local mainEvent = game:GetService("ReplicatedStorage"):FindFirstChild("MainEvent")
+
+-- Function to start auto-dropping cash
+local function startAutoDrop()
+    if not mainEvent then
+        return
+    end
+
+    autoDropEnabled = true
+
+    -- Loop to drop cash
+    while autoDropEnabled do
+        pcall(function()
+            mainEvent:FireServer("DropMoney", dropAmount)
+        end)
+        task.wait(1) -- Drop every 1 second
+    end
+end
+
+-- Function to stop auto-dropping cash
+local function stopAutoDrop()
+    autoDropEnabled = false
+end
+
+
+-- Toggle to start/stop auto-dropping
+misc:Toggle("Auto Drop Money", function(state)
+        if state then
+            startAutoDrop()
+        else
+            stopAutoDrop()
+        end
+    end)
+
+    misc:Toggle("Disable Global Shadows", function(state)
+            if state then
+            game.Lighting.GlobalShadows = false
+        else
+            game.Lighting.GlobalShadows = true
+        end
+    end)
+
+    -- Variables
+local defaultZoom = game.Players.LocalPlayer.CameraMaxZoomDistance
+local maxZoomEnabled = false
+misc:Toggle("Infinite Zoom", function(state)
+        maxZoomEnabled = state
+        if maxZoomEnabled then
+            game.Players.LocalPlayer.CameraMaxZoomDistance = 10000
+        else
+            game.Players.LocalPlayer.CameraMaxZoomDistance = defaultZoom
+            end
+            end)
+
+
+local RunService = game:GetService("RunService")
+local LocalPlayer = game.Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+local HealthMonitorEnabled = false
+local originalCFrame
+local safeLocation = CFrame.new(0, 1000, 0) -- Safe location to teleport to
+
+-- Function to reattach Humanoid and RootPart when the player respawns
+local function refreshCharacter()
+    Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    Humanoid = Character:WaitForChild("Humanoid")
+    RootPart = Character:WaitForChild("HumanoidRootPart")
+end
+
+-- Function to monitor health and teleport accordingly
+local function monitorHealth()
+    RunService.RenderStepped:Connect(function()
+        if HealthMonitorEnabled and Humanoid and RootPart then
+            if Humanoid.Health <= 27 then
+                if not originalCFrame then
+                    originalCFrame = RootPart.CFrame
+                end
+                RootPart.CFrame = safeLocation
+            elseif Humanoid.Health >= 30 and originalCFrame then
+                RootPart.CFrame = originalCFrame
+                originalCFrame = nil
+            end
+        end
+    end)
+end
+
+misc:Toggle("Save When LowHP", function(state)
+        HealthMonitorEnabled = state
+        if HealthMonitorEnabled then
+            monitorHealth()
+        else
+    end
+end)
+
+--// Variables
+local clickSoundEnabled = false
+local clickSoundId = "rbxassetid://160432334" -- Replace with your desired sound ID
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local Mouse = lp:GetMouse()
+
+-- Add Sound to CoreGui
+local clickSound = Instance.new("Sound")
+clickSound.Name = "ClickSound"
+clickSound.Parent = game.CoreGui
+clickSound.SoundId = clickSoundId
+clickSound.Volume = 1
+
+-- Function to Detect and Play Sound
+local function onClick()
+    if not clickSoundEnabled then return end
+
+    local target = Mouse.Target
+    if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
+        local clickedPlayer = Players:GetPlayerFromCharacter(target.Parent)
+        if clickedPlayer and clickedPlayer ~= lp then
+            clickSound:Play()
+            print("Clicked on player:", clickedPlayer.Name)
+        end
+    end
+end
+
+-- Connect Mouse Click
+Mouse.Button1Down:Connect(onClick)
+
+
+misc:Toggle("Hitmarker [SoundOnly]", function(state)
+    clickSoundEnabled = state
+end)
+
+-- Auto Stomp Variables
+local autoStompEnabled = false
+local mainEvent = game:GetService("ReplicatedStorage"):FindFirstChild("MainEvent") -- Replace with the correct RemoteEvent path
+
+-- Function to handle the Auto Stomp logic
+local function handleAutoStomp()
+    while autoStompEnabled do
+        task.wait(0.1) -- Adjust interval if needed
+        if mainEvent then
+            mainEvent:FireServer("Stomp")
+        else
+            warn("[Auto Stomp]: MainEvent RemoteEvent not found!")
+            break -- Stop the loop if MainEvent is missing
+        end
+    end
+end
+
+
+misc:Toggle("Auto Stomp", function(state)
+    autoStompEnabled = state
+    if autoStompEnabled then
+        print("[Auto Stomp]: Enabled")
+
+        task.spawn(handleAutoStomp)
+    else
+        print("[Auto Stomp]: Disabled")
+    end
+end)
+
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    if autoStompEnabled then
+        task.spawn(handleAutoStomp)
+    end
+end)
+
+
+
+local misc = miscstuff1:Section()
+
+
+
+local teleportService = game:GetService("TeleportService")
+local players = game:GetService("Players")
+local httpService = game:GetService("HttpService")
+local proximityPromptService = game:GetService("ProximityPromptService")
+local lp = players.LocalPlayer
+local spawnPoint = nil
+
+
+local function rejoinServer()
+    teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, lp)
+end
+
+-- Function to Server Hop
+local function serverHop()
+    local placeId = game.PlaceId
+
+    -- Fetch the server list
+    local function getServerList()
+        local servers = {}
+        local nextCursor = ""
+
+        repeat
+            local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?limit=100&cursor=" .. nextCursor
+            local response = game:HttpGet(url)
+            local data = httpService:JSONDecode(response)
+
+            for _, server in pairs(data.data) do
+                if server.playing < server.maxPlayers then
+                    table.insert(servers, server.id)
+                end
+            end
+
+            nextCursor = data.nextPageCursor
+        until not nextCursor
+
+        return servers
+    end
+
+    -- Teleport to a random server
+    local servers = getServerList()
+    if #servers > 0 then
+        teleportService:TeleportToPlaceInstance(placeId, servers[math.random(1, #servers)])
+    else
+        warn("No available servers found.")
+    end
+end
+
+
+local function joinSmallestServer()
+    local placeId = game.PlaceId
+
+    local function getSmallestServer()
+        local smallestServer = nil
+        local smallestPlayerCount = math.huge
+        local nextCursor = ""
+
+        repeat
+            local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?limit=100&cursor=" .. nextCursor
+            local response = game:HttpGet(url)
+            local data = httpService:JSONDecode(response)
+
+            for _, server in pairs(data.data) do
+                if server.playing < smallestPlayerCount and server.playing < server.maxPlayers then
+                    smallestServer = server.id
+                    smallestPlayerCount = server.playing
+                end
+            end
+
+            nextCursor = data.nextPageCursor
+        until not nextCursor
+
+        return smallestServer
+    end
+
+    local smallestServer = getSmallestServer()
+    if smallestServer then
+        teleportService:TeleportToPlaceInstance(placeId, smallestServer)
+    else
+        warn("No smallest server found.")
+    end
+end
+
+-- Function to Set a Custom Spawnpoint
+local function setSpawnpoint()
+    if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+        spawnPoint = lp.Character.HumanoidRootPart.CFrame
+        print("[Spawnpoint Set]:", spawnPoint)
+    else
+        warn("Failed to set spawn point. Character not found.")
+    end
+end
+
+-- Function to Reset Spawnpoint
+local function resetSpawnpoint()
+    spawnPoint = nil
+    print("[Spawnpoint Reset]")
+end
+
+
+lp.CharacterAdded:Connect(function(character)
+    if spawnPoint then
+        character:WaitForChild("HumanoidRootPart").CFrame = spawnPoint
+        print("[Custom Spawnpoint Applied]")
+    end
+end)
+
+
+local function interactWithPrompts()
+    for _, prompt in pairs(proximityPromptService:GetAllPrompts()) do
+        if prompt.Enabled then
+            prompt:InputHoldBegin()
+            task.wait(0.1)
+            prompt:InputHoldEnd()
+        end
+    end
+    print("[Proximity Prompts Interacted]")
+end
+
+
+misc:Button("Rejoin", function()
+    rejoinServer()
+end)
+
+misc:Button("Server Hop", function()
+    serverHop()
+end)
+
+misc:Button("Join Smallest Server", function()
+    joinSmallestServer()
+end)
+
+misc:Button("Set Spawnpoint", function()
+    setSpawnpoint()
+end)
+
+misc:Button("Reset Spawnpoint", function()
+    resetSpawnpoint()
+end)
+
+misc:Button("Instantly Interact with ProximityPrompts", function()
+    interactWithPrompts()
+end)
+
+
+local tps = sett:Section()
+
+
+-- Local Player Reference
+local LocalPlayer = game.Players.LocalPlayer
+
+-- Function to Teleport to a Location
+local function teleportToLocation(cframe)
+    if LocalPlayer.Character then
+        local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            rootPart.CFrame = cframe
+        else
+            warn("HumanoidRootPart not found!")
+        end
+    else
+        warn("Character not found!")
+    end
+end
+
+-- List of Teleports
+local teleports = {
+    {Name = "Hair Salon", CFrame = CFrame.new(-858.903992, 22.229845, -652.395386, 0.999997675, 1.04370868e-08, 0.00214449666, -1.04501705e-08, 1, 6.09004713e-09, -0.00214449666, -6.11244344e-09, 0.999997675)},
+    {Name = "Downhill Gunz", CFrame = CFrame.new(-585.172668, 8.53961563, -738.284912, -0.988136709, 5.93399641e-08, 0.15357691, 5.39786988e-08, 1, -3.90789836e-08, -0.15357691, -3.0325495e-08, -0.988136709)},
+    {Name = "Downhill", CFrame = CFrame.new(-535.531677, 7.77967978, -735.653503, 0.127365023, -1.13438247e-07, -0.991855919, 1.92058458e-08, 1, -1.11903447e-07, 0.991855919, -4.79684603e-09, 0.127365023)},
+    {Name = "Park", CFrame = CFrame.new(-262.246429, 22.3747082, -761.097412, -0.02295761, -1.70424084e-08, -0.999736428, -6.27854178e-08, 1, -1.56051172e-08, 0.999736428, 6.24106136e-08, -0.02295761)},
+    {Name = "Phone Store", CFrame = CFrame.new(-104.182137, 22.1353168, -982.288818, 0.0355157889, 1.10258815e-08, 0.999369144, 3.79197402e-08, 1, -1.23804416e-08, -0.999369144, 3.83355179e-08, 0.0355157889)},
+    {Name = "Da Boxing Club", CFrame = CFrame.new(-262.111969, 53.5958977, -1128.14575, 0.00843573082, 3.37599069e-08, -0.999964416, 2.64708309e-08, 1, 3.39844171e-08, 0.999964416, -2.67565721e-08, 0.00843573082)},
+    {Name = "Military Base 1", CFrame = CFrame.new(38.9565392, 25.4798393, -875.776855, 0.0272912271, -8.45637658e-08, -0.999627531, -2.276267e-08, 1, -8.52167261e-08, 0.999627531, 2.507986e-08, 0.0272912271)},
+    {Name = "Military Base 2", CFrame = CFrame.new(7.64928007, 25.6048412, -796.079346, 0.989884973, -6.736758e-08, -0.141872257, 7.33734709e-08, 1, 3.71017919e-08, 0.141872257, -4.71361687e-08, 0.989884973)},
+    {Name = "Apartments", CFrame = CFrame.new(450.005859, 54.7852821, -733.311035, -0.0272750147, 1.1411673e-07, 0.999627948, 3.22204521e-08, 1, -1.13280059e-07, -0.999627948, 2.91187501e-08, -0.0272750147)},
+    {Name = "Uphill", CFrame = CFrame.new(481.419678, 47.9798317, -572.17981, 0.0273022875, -3.60007242e-08, -0.999627233, 3.25085536e-09, 1, -3.59253605e-08, 0.999627233, -2.26879915e-09, 0.0273022875)},
+    {Name = "Uphill Gunz", CFrame = CFrame.new(481.327362, 48.2953339, -624.64209, 0.999924064, 1.58007474e-08, -0.0123237874, -1.69500733e-08, 1, -9.31562312e-08, 0.0123237874, 9.33580395e-08, 0.999924064)},
+    {Name = "Jeff's Taco Shop", CFrame = CFrame.new(578.454773, 51.2825127, -443.065948, -0.0543017648, 7.04000014e-09, -0.998524547, 1.21950239e-09, 1, 6.98408353e-09, 0.998524547, -8.38454972e-10, -0.0543017648)},
+    {Name = "Gas Station", CFrame = CFrame.new(592.524902, 49.2248726, -257.919739, -0.027369678, 4.81166254e-08, 0.999625385, 1.11858668e-07, 1, -4.50719746e-08, -0.999625385, 1.10583159e-07, -0.027369678)},
+    {Name = "Breaking Bad", CFrame = CFrame.new(598.694397, 28.8013668, -214.175735, -0.00221744645, 5.50845503e-09, 0.999997556, 1.1367669e-09, 1, -5.50594814e-09, -0.999997556, 1.12455489e-09, -0.00221744645)},
+    {Name = "Train Station", CFrame = CFrame.new(618.314453, 48.3498306, -91.2029877, 0.687495768, -3.59509222e-08, 0.726188362, -4.68783057e-08, 1, 9.38868823e-08, -0.726188362, -9.8589318e-08, 0.687495768)},
+    {Name = "Warehouse", CFrame = CFrame.new(419.10849, 39.5040359, -5.14699841, -0.016619077, 2.10424673e-08, -0.999861896, -7.32969641e-09, 1, 2.11672031e-08, 0.999861896, 7.68046338e-09, -0.016619077)},
+    {Name = "Church", CFrame = CFrame.new(205.797821, 26.9798393, -14.0783749, 0.999128997, 6.74798928e-09, -0.0417286344, -6.59424693e-09, 1, 3.82197562e-09, 0.0417286344, -3.54347751e-09, 0.999128997)},
+    {Name = "Graveyard", CFrame = CFrame.new(202.297409, 21.9748344, 74.9401398, 0.999738038, -3.10705839e-09, -0.0228883382, 4.30997638e-09, 1, 5.25066e-08, 0.0228883382, -5.25914921e-08, 0.999738038)},
+    {Name = "Barber Shop", CFrame = CFrame.new(3.19866323, 21.9748383, -95.4573822, 0.995172679, 5.13761478e-09, -0.0981391966, 5.16549914e-09, 1, 1.04730617e-07, 0.0981391966, -1.04731988e-07, 0.995172679)},
+    {Name = "Fire Department", CFrame = CFrame.new(-129.173172, 28.0365429, -97.7412491, 0.999890447, 7.86246446e-08, 0.0148027483, -7.77612001e-08, 1, -5.89054423e-08, -0.0148027483, 5.77479078e-08, 0.999890447)},
+    {Name = "Prison", CFrame = CFrame.new(-254.394608, 22.0247936, -114.007179, 0.997883499, 2.85334734e-09, 0.0650272369, -1.98803321e-10, 1, -4.08285032e-08, -0.0650272369, 4.07291623e-08, 0.997883499)},
+}
+
+
+-- Create Buttons for Each Location
+for _, location in ipairs(teleports) do
+    tps:Button(location.Name, function()
+        teleportToLocation(location.CFrame)
+    end)
+end
+
+local tps = sett:Section()
+
+-- List of Teleports
+local teleports = {
+    {Name = "Jail Cell 1", CFrame = CFrame.new(-292.835785, 22.0247784, -67.4318695, 0.00403267192, 1.10237458e-07, 0.999991894, 1.43803423e-08, 1, -1.10296348e-07, -0.999991894, 1.48250141e-08, 0.00403267192)},
+    {Name = "Jail Cell 2", CFrame = CFrame.new(-293.075775, 22.0247784, -111.136848, 0.00401768787, 6.49228369e-08, 0.999991953, 1.00318898e-09, 1, -6.49273915e-08, -0.999991953, 1.26403887e-09, 0.00401768787)},
+    {Name = "Prison Courtyard", CFrame = CFrame.new(-330.616608, 21.9748363, -93.1790771, 0.0165798459, 6.05130168e-08, 0.999862552, 4.10318179e-08, 1, -6.12017317e-08, -0.999862552, 4.20408952e-08, 0.0165798459)},
+    {Name = "Da Furniture", CFrame = CFrame.new(-489.332764, 22.0746899, -105.573448, 0.999738336, 1.49052255e-08, -0.0228739958, -1.45592596e-08, 1, 1.52914108e-08, 0.0228739958, -1.49543808e-08, 0.999738336)},
+    {Name = "Revolver", CFrame = CFrame.new(-635.191589, 21.9748383, -131.015411, -0.992778778, 9.8927714e-08, -0.119959362, 1.01991219e-07, 1, -1.9398291e-08, 0.119959362, -3.14930126e-08, -0.992778778)},
+    {Name = "Bank", CFrame = CFrame.new(-480.693451, 23.3202801, -285.130737, -0.0228215475, -1.65735479e-08, -0.999739528, -1.06388818e-07, 1, -1.41492755e-08, 0.999739528, 1.060382e-07, -0.0228215475)},
+    {Name = "Bank Vault", CFrame = CFrame.new(-653.817383, -30.8477154, -284.390961, -0.104894415, 1.64641598e-08, 0.994483352, 2.16860609e-08, 1, -1.42681245e-08, -0.994483352, 2.00697805e-08, -0.104894415)},
+    {Name = "Basketball", CFrame = CFrame.new(-930.917542, 22.2246609, -482.161194, -0.0189474747, 2.00118198e-08, 0.999820471, 2.76707013e-08, 1, -1.94910292e-08, -0.999820471, 2.72964282e-08, -0.0189474747)},
+    {Name = "Soccer", CFrame = CFrame.new(-749.489258, 22.5051117, -484.928558, 0.0252303351, 3.35677997e-09, -0.999681652, 4.23194235e-09, 1, 3.46465634e-09, 0.999681652, -4.31800951e-09, 0.0252303351)},
+    {Name = "Car Swift", CFrame = CFrame.new(-762.194946, 22.13484, -634.940369, 0.999825478, 2.54162416e-08, -0.0186829045, -2.74896088e-08, 1, -1.10719832e-07, 0.0186829045, 1.11214092e-07, 0.999825478)},
+    {Name = "Foodmart", CFrame = CFrame.new(-942.294128, 22.229845, -659.847229, -0.0123276254, -8.45639363e-08, -0.999924004, 9.91037385e-09, 1, -8.46925445e-08, 0.999924004, -1.09536789e-08, -0.0123276254)},
+    {Name = "Laundry Mat", CFrame = CFrame.new(-991.862305, 22.230732, -617.259705, -0.0311922338, 3.50725919e-08, -0.999513388, -8.81383233e-09, 1, 3.53647209e-08, 0.999513388, 9.91264759e-09, -0.0311922338)},
+    {Name = "Apocalypse Bunker", CFrame = CFrame.new(-873.65863, 2.97984576, -681.878235, -0.0122650489, 2.11469242e-08, -0.999924779, 9.25905184e-08, 1, 2.00128021e-08, 0.999924779, -9.23380981e-08, -0.0122650489)},
+    {Name = "Pool", CFrame = CFrame.new(-847.593262, 22.0248489, -279.126678, -0.999827206, 5.25901633e-08, 0.0185894985, 5.39648433e-08, 1, 7.34475876e-08, -0.0185894985, 7.4438077e-08, -0.999827206)},
+    {Name = "Double Barrel", CFrame = CFrame.new(-1033.06641, 21.9748363, -276.859955, -0.997631013, 4.03034868e-08, 0.0687924996, 4.0265288e-08, 1, -1.94190442e-09, -0.0687924996, 8.32645619e-10, -0.997631013)},
+    {Name = "Da Arcade", CFrame = CFrame.new(-864.8703, 22.0247974, -145.036301, -0.99998194, -3.35360562e-09, 0.00600786461, -3.23012062e-09, 1, 2.05636166e-08, -0.00600786461, 2.05438386e-08, -0.99998194)},
+    {Name = "Da Theatre", CFrame = CFrame.new(-1006.09521, 25.3248653, -104.005157, -0.999827385, -4.87512324e-08, 0.0185795408, -4.96755668e-08, 1, -4.92886372e-08, -0.0185795408, -5.02030773e-08, -0.999827385)},
+    {Name = "High School", CFrame = CFrame.new(-587.909729, 22.0998383, 336.177979, 0.999515951, 3.58220831e-08, -0.0311114099, -3.60824117e-08, 1, -7.80625431e-09, 0.0311114099, 8.92505003e-09, 0.999515951)},
+    {Name = "Trailer", CFrame = CFrame.new(-952.276062, -1.00961792, 468.70639, -0.999914467, -1.7120195e-08, 0.0130786262, -1.84893949e-08, 1, -1.04568876e-07, -0.0130786262, -1.04801742e-07, -0.999914467)},
+    {Name = "Sewer", CFrame = CFrame.new(-421.667267, -21.0251637, 41.7348747, -0.999042511, 8.2585828e-08, 0.0437503457, 8.03070819e-08, 1, -5.38427436e-08, -0.0437503457, -5.02777233e-08, -0.999042511)},
+    {Name = "Hood Fitness", CFrame = CFrame.new(-76.8410797, 22.925127, -631.952393, -0.999981523, -7.2005065e-08, 0.00607688213, -7.15252781e-08, 1, 7.91704053e-08, -0.00607688213, 7.87342955e-08, -0.999981523)},
+}
+
+-- Create Buttons for Each Location
+for _, location in ipairs(teleports) do
+    tps:Button(location.Name, function()
+        teleportToLocation(location.CFrame)
+    end)
+end
+
+local vis = Window:CreateTab("visuals")
+local visuals = vis:Section()
+local plrs = game:GetService("Players")
+--------------------------------------------------------
+
+runFunction(function() -- ESP
+	local Camera = workspace.CurrentCamera
+	local Section = espsection
+
+	local ESPBoxes = {}
+	local NameLabels = {}
+	local updating = false
+	local updatingNames = false
+
+	local function updateESP(state)
+		if state then
+			updating = true
+
+			local function addESP(player)
+				if player ~= plrs.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+					local box = ESPBoxes[player] or Drawing.new("Square")
+					box.Color = Color3.fromRGB(255, 255, 255)
+					box.Thickness = 2
+					box.Transparency = 1
+					box.Filled = false
+					ESPBoxes[player] = box
+				end
+			end
+
+			for _, player in pairs(plrs:GetPlayers()) do
+				addESP(player)
+			end
+
+			task.spawn(function()
+				while updating do
+					for player, box in pairs(ESPBoxes) do
+						if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+							local rootPart = player.Character.HumanoidRootPart
+							local screenPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+
+							if onScreen then
+								box.Size = Vector2.new(2000 / screenPos.Z, 3000 / screenPos.Z)
+								box.Position = Vector2.new(screenPos.X - box.Size.X / 2, screenPos.Y - box.Size.Y / 2)
+								box.Visible = true
+							else
+								box.Visible = false
+							end
+						else
+							box.Visible = false
+						end
+					end
+					task.wait(1 / 148)
+				end
+			end)
+
+			plrs.PlayerAdded:Connect(function(player)
+				player.CharacterAdded:Connect(function()
+					task.wait(1)
+					addESP(player)
+				end)
+			end)
+
+			plrs.PlayerRemoving:Connect(function(player)
+				if ESPBoxes[player] then
+					ESPBoxes[player]:Remove()
+					ESPBoxes[player] = nil
+				end
+			end)
+		else
+			updating = false
+
+			for _, box in pairs(ESPBoxes) do
+				box:Remove()
+			end
+			ESPBoxes = {}
+		end
+	end
+
+	local function updateNames(state)
+		if state then
+			updatingNames = true
+
+			local function addNameLabel(player)
+				if player ~= plrs.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+					local nameLabel = NameLabels[player] or Drawing.new("Text")
+					nameLabel.Text = player.Name
+					nameLabel.Size = 15
+					nameLabel.Color = Color3.fromRGB(255, 255, 255)
+					nameLabel.Center = true
+					nameLabel.Outline = true
+					NameLabels[player] = nameLabel
+				end
+			end
+
+			for _, player in pairs(plrs:GetPlayers()) do
+				addNameLabel(player)
+			end
+
+			task.spawn(function()
+				while updatingNames do
+					for player, nameLabel in pairs(NameLabels) do
+						if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+							local rootPart = player.Character.HumanoidRootPart
+							local headPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position + Vector3.new(0, 3, 0))
+
+							if onScreen then
+								nameLabel.Position = Vector2.new(headPos.X, headPos.Y)
+								nameLabel.Visible = true
+							else
+								nameLabel.Visible = false
+							end
+						else
+							nameLabel.Visible = false
+						end
+					end
+					task.wait(1 / 148)
+				end
+			end)
+
+			plrs.PlayerAdded:Connect(function(player)
+				player.CharacterAdded:Connect(function()
+					task.wait(1)
+					addNameLabel(player)
+				end)
+			end)
+
+			plrs.PlayerRemoving:Connect(function(player)
+				if NameLabels[player] then
+					NameLabels[player]:Remove()
+					NameLabels[player] = nil
+				end
+			end)
+		else
+			updatingNames = false
+
+			for _, nameLabel in pairs(NameLabels) do
+				nameLabel:Remove()
+			end
+			NameLabels = {}
+		end
+	end
+
+	visuals:Toggle("Boxes [working by 12/30/24]", function(value)
+		updateESP(value)
+	end)
+
+	visuals:Toggle("Names [working by 12/30/24]", function(value)
+		updateNames(value)
+	end)
+end)
+
+--------------------------------------------------------------------------------
+-- Safeguards and Fixes
+--------------------------------------------------------------------------------
