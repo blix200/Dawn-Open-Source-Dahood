@@ -1,4 +1,4 @@
-local win = loadstring(game:HttpGet("https://scripting.live/gamma.lua"))()
+local win = loadstring(game:HttpGet("https://raw.githubusercontent.com/blix200/Dawn-Open-Source-Dahood/refs/heads/main/DawnUiLib.txt"))()
 
 local Window = win:CreateWindow("dawn beta UI test")
 
